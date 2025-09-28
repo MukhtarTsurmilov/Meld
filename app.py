@@ -9,27 +9,31 @@ from sklearn.metrics.pairwise import linear_kernel
 from rapidfuzz import process, fuzz
 import pymorphy3
 from scipy import sparse
-import gdown  # 🔥 Новый импорт
+import gdown
 
 # 🔥 НАСТРОЙКА ЗАГРУЗКИ АРТЕФАКТОВ ИЗ GOOGLE DRIVE
 ARTIFACT_DIR = "artifacts"
-
 os.makedirs(ARTIFACT_DIR, exist_ok=True)
 
 # 🔥 ЗАМЕНИ ССЫЛКИ НА ТВОИ ФАЙЛЫ ИЗ GOOGLE DRIVE
 files_to_download = [
     ("data_arrays.npz", "https://drive.google.com/uc?id=1J2aZ4Din2s3W2JVlROH7A3PhPkhzZTOA"),
     ("vectorizer.joblib", "https://drive.google.com/uc?id=1t9UjgGZfCYubSZbyip_UNzEVSRgEzqm8"),
-    ("tfidf_matrix.joblib", "https://drive.google.com/uc?id=1ZynEXjWfp-cl00f2oIOjuE98UOnMynU7"),
+    ("tfidf_matrix.joblib", "https://drive.google.com/uc?id=1trO2RiHvggQkNzmLWDWdCaku9DvXnjvv"),
     ("vectorizer_lemma.joblib", "https://drive.google.com/uc?id=1p2iYFFxxYnCZKVL7irBr2KP-PggoG8Fa"),
     ("tfidf_matrix_lemma.joblib", "https://drive.google.com/uc?id=1ZynEXjWfp-cl00f2oIOjuE98UOnMynU7"),
 ]
 
+
+st.info("🚀 Приложение запущено, начинаю загрузку артефактов...")
+
 for filename, url in files_to_download:
+    st.info(f"📥 Пытаюсь скачать {filename}...")
     filepath = os.path.join(ARTIFACT_DIR, filename)
     if not os.path.exists(filepath):
         st.info(f"📥 Скачиваю {filename}...")
         gdown.download(url, filepath, quiet=False)
+        st.success(f"✅ {filename} скачан")
     else:
         st.success(f"✅ {filename} уже есть")
 
@@ -139,6 +143,12 @@ def load_index(artifacts_dir=ARTIFACT_DIR):
     tfidf_lemma_path = os.path.join(artifacts_dir, "tfidf_matrix_lemma.joblib")
     if os.path.exists(tfidf_lemma_path):
         X_lemma = joblib.load(tfidf_lemma_path)
+
+    # 🔥 ПРОВЕРКА: Если X_lemma есть, но vectorizer_lemma нет — обнуляем X_lemma
+    if X_lemma is not None and vectorizer_lemma is None:
+        st.warning("⚠️ Загружена матрица лемм, но нет векторайзера — игнорирую леммы")
+        X_lemma = None
+
     return vectorizer, X, names, texts, ids, vectorizer_lemma, X_lemma, texts_lemmatized
 
 def get_candidates(query, top_k, vectorizer, X, names, texts, 
@@ -385,7 +395,7 @@ try:
     lemma_status = "доступны" if vectorizer_lemma is not None else "не доступны"
     st.caption(f"✅ Индекс загружен: {len(names_full):,} строк. Леммы: {lemma_status}")
 except Exception as e:
-    st.error(f"Ошибка загрузки: {e}")
+    st.error(f"❌ Ошибка загрузки: {e}")
     st.stop()
 
 if btn:

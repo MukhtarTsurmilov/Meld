@@ -4,6 +4,7 @@ numpy==1.26.4
 pandas==2.2.2
 scikit-learn==1.5.1
 rapidfuzz==3.8.0
-pymorphy3==0.2.1
+pymorphy3
 scipy==1.13.1
+
 gdown==4.7.1
